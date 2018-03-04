@@ -1,8 +1,0 @@
-name = FTCL-75
-description = "Custom module FTCL-75"
-core = 7.x
-package = FTCL-75
-files[] = ftcl-75.module
-files[] = ftcl-75.install
-files[] = ftcl-75.admin.inc
-configure = admin/config/content/ftcl-75/settings

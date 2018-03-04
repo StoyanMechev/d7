@@ -6,7 +6,7 @@
  * and open the template in the editor.
  */
 
-function beep_beep(){
+function fctl-75_beep(){
   watchdog('beep','Beep!');	
 } 
 
@@ -14,7 +14,7 @@ function beep_beep(){
  /**
   * Implementation of hook_action_info().
   */
-function beep_action_info(){
+function fctl-75_action_info(){
   return array(
     'beep_beep_action' => array (
 	'type' => 'system',
@@ -44,7 +44,7 @@ function beep_beep_action(){
 function beep_multiple_beep_action_form($context){
   $form['beeps'] = array(
     '#type' => 'textfield',
-	'#title' => t('Number of beeps'),
+	'#title' => t('Number of beeps '),
 	'#description' => t('Enter the number of times to beep when this action executes'),
 	'#default_value' => isset($context['beeps']) ? $context['beeps'] : '1',
 	'#requred' => TRUE,

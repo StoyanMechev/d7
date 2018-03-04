@@ -4,15 +4,15 @@
  * Implements hook_install()
  */
  
-function annotate_install(){
+function fctl-75_install(){
 
   // Check to see if annotation field exists.
-  $field = field_info_field('annotation');
+  $field = field_info_field('fctl-75-page');
   
   // if the annotation field does not exist then create it
   if (empty($field)){
     $field = array(
-	  'field_name' => 'annotation',
+	  'field_name' => 'fctl-75-page',
 	  'type' => 'text_with_summary',
 	  'entity_types' => array('node'),
 	  'translatable' => TRUE,
@@ -24,25 +24,25 @@ function annotate_install(){
 /**
  * Implements hook_uninstall()
  */
-function annotate_uninstall(){
-   watchdog("Annotate Module", "Uninstalling module and deleting fields");
+function fctl-75_uninstall(){
+   watchdog("FCTL-75 module", "Uninstalling module and deleting fields");
    
    $types = node_type_get_types();
    
    foreach($types as $type){
-      annotate_delete_annotation($type);
+      fctl-75_delete_fctl-75-page($type);
    }
    
-   $field = field_info_field('annotation');
+   $field = field_info_field('fctl-75-page');
    
    if ($field){
-      field_delete_field('annotation');
+      field_delete_field('fctl-75-page');
    }
 } 
 
-function annotate_delete_annotation($type) {
+function fctl-75_delete_fctl-75-page($type) {
 
-  $instance = field_info_instance('node', 'annotation', $type->type);
+  $instance = field_info_instance('node', 'fctl-75-page', $type->type);
   
   if($instance){
     field_delete_instance($instance);

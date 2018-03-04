@@ -1,0 +1,8 @@
+name = fctl-75
+description = "Custom module FCTL-75"
+core = 7.x
+package = FCTL-75
+files[] = fctl-75.module
+files[] = fctl-75.install
+files[] = fctl-75.admin.inc
+configure = admin/config/content/fctl-75/settings
