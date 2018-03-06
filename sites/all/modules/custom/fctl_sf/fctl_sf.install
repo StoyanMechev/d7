@@ -1,0 +1,27 @@
+<?php
+
+/**
+ * Implements hook_install()
+ */
+ 
+function fctl_sf_install(){
+
+  //Creatin a new Drupal node  
+  $node = new StdClass();
+  $node->type = 'page';
+  $node->status = 1;
+  $node->title = "Test page title";
+  $node->body = 'This is a custom test page body';
+  //$node->nid = 'fctl75'
+
+  node_save($node);
+  krumo($node);
+} 
+
+/**
+ * Implements hook_uninstall()
+ */
+function fctl_sf_uninstall(){
+  watchdog("FCTL-75 Module", "Uninstalling module");
+ // node_delete('fctl75');    
+} 
