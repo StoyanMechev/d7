@@ -1,27 +1,63 @@
 <?php
-
 /**
- * Implements hook_install()
- */
- 
-function fctl_sf_install(){
-
-  //Creatin a new Drupal node  
-  $node = new StdClass();
-  $node->type = 'page';
-  $node->status = 1;
-  $node->title = "Test page title";
-  $node->body = 'This is a custom test page body';
-  //$node->nid = 'fctl75'
-
-  node_save($node);
-  krumo($node);
-} 
-
+* @file
+* Install file for FCTL-75 module.
+*/
 /**
- * Implements hook_uninstall()
- */
-function fctl_sf_uninstall(){
-  watchdog("FCTL-75 Module", "Uninstalling module");
- // node_delete('fctl75');    
-} 
+* Implements hook_install().
+* - Add the body field.
+* - Configure the body field.
+*/
+function fctl_sf_install() {
+  node_types_rebuild();
+  $types = node_type_get_types();
+  // add the body field to the node type
+  node_add_body_field($types['fctl_sf_body']);
+  // Load the instance definition for our content type's body
+  $body_instance = field_info_instance('node', 'body', 'fctl_sf_body');
+  // Configure the body field
+  $body_instance['type'] = 'text_summary_or_trimmed';
+  // Save our changes to the body field instance.
+  field_update_instance($body_instance);
+  // Create all the fields we are adding to our content type.
+  foreach (_fctl_sf_installed_fields() as $field) {
+    field_create_field($field);
+  }
+// Create all the instances for our fields.
+  foreach (_fctl_sf_installed_instances() as $instance) {
+    $instance['entity_type'] = 'node';
+    $instance['bundle'] = 'fctl_sf';
+    field_create_instance($instance);
+  }
+}
+/**
+* Implements hook_uninstall().
+*/
+function fctl_sf_uninstall() {
+// Gather all the example content that might have been created while this
+// module was enabled.
+  $sql = 'SELECT nid FROM {node} n WHERE n.type = :type';
+  $result = db_query($sql, array(':type' => 'fctl_sf'));
+  $nids = array();
+  foreach ($result as $row) {
+    $nids[] = $row->nid;
+  }
+  // Delete all the nodes at once
+  node_delete_multiple($nids);
+  // Loop over each of the fields defined by this module and delete
+  // all instances of the field, their data, and the field itself.
+  foreach (array_keys(_job_post_installed_fields()) as $field) {
+    field_delete_field($field);
+  }
+  // Loop over any remaining field instances attached to the fctl_sf
+  // content type (such as the body field) and delete them individually.
+  $instances = field_info_instances('node', 'fctl_sf');
+  foreach ($instances as $instance_name => $instance) {
+    field_delete_instance($instance);
+  }
+  // Delete our content type
+  node_type_delete('fctl_sf');
+
+  // Purge all field infromation
+  field_purge_batch(1000);
+}
