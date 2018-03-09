@@ -9,14 +9,10 @@
 function fctl_sf_test_form_page (){
   $form = array();
   $form['test'] = array(
-    '#type' => 'select',
+    '#type' => 'textfield',
     '#title' => t('Please enter your data'),
-    '#description' => t('Description'), 
-    '#options' => array(
-      'opt1' => t('Option 1'),
-      'opt2' => t('Option 2'),  
-    ),
-    '#default_value' => 'opt2'  
+    '#description' => t('Field decription'), 
+    '#required' => TRUE,
   );
   $form['submit'] = array(
     '#type' => 'submit',
