@@ -20,31 +20,41 @@ function fctl_sf_node_info() {
 }
 
 /**
- * Implement hook_form()
- */
-function fctl_sf_page_form($node, $form_state) {
-  krumo($node);  
-  return node_content_form($node, $form_state);
-}
-/**
 * Implementation of hook_menu().
 */
 function fctl_sf_menu() {
   $items['fctl_sf_page'] = array(
     'title' => 'Test page',
     'page callback' => 'fctl_sf_create_ftcl_page',
-    'access callback' => TRUE,
+    'access callback' => 'fctl_sf_access_control',
     'type' => MENU_NORMAL_ITEM,
     'weight' => -1,  
   );
-//  $items['fctl_sf1'] = array(
-//    'title' => 'Create FCTL user',
-//    'page callback' => 'fctl_sf_create_ftcl_user',
-//    'access callback' => TRUE,
-//    'type' => MENU_NORMAL_ITEM,
-//    'weight' => -2,  
-//  );
+  $items['fctl_sf/form'] = array(
+    'title' => 'Test form',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('fctl_sf_test_form'),
+    'access callback' => 'fctl_sf_access_control',
+    'description' => 'My form description',
+    'file' => 'fctl_sf.test_form.inc',  
+    'type' => MENU_NORMAL_ITEM,
+    'weight' => -2,  
+  );
+  $items['show_submissions'] = array(
+    'title' => 'Show submissions',
+    'page callback' => 'fctl_sf_show_submissions',
+    'access callback' => 'fctl_sf_access_control',
+    'type' => MENU_NORMAL_ITEM,
+    'weight' => -1,
+  );
   return $items;
+}
+
+/**
+* Access callback.
+*/
+function fctl_sf_access_control(){
+  return user_has_role(3);    
 }
 
 /**
@@ -53,41 +63,47 @@ function fctl_sf_menu() {
 function fctl_sf_create_ftcl_page() {
   $content = "This is a custom test page";
   return $content;
-//Creatin a new Drupal node  
-//  global $user;
-/**  $node = new stdClass();
-//  $node->title = "Hello World custom page";
-//  $node->type = "fctl_sf_page";
-//  // Sets some defaults. Invokes hook_prepare() and hook_node_prepare().
-//  node_object_prepare($node); 
-//  // Or e.g. 'en' if locale is enabled.
-//  $node->language = LANGUAGE_NONE; 
-//  $node->uid = $user->uid; 
-//  // Status is 1 or 0; published or not.
-//  $node->status = 1; 
-//  // Promote is 1 or 0; promoted to front page or not.
-//  $node->promote = 1; 
-//  // Comment is 0, 1, 2; 0 = disabled, 1 = read only, or 2 = read/write.
-//  $node->comment = 1; 
-//
-//  // Text field
-//  $node->body = t("This is a custom test page 123");
-//  
-//  $node = node_submit($node); // Prepare node for saving
-//  node_save($node);
-//
-//  krumo($node);
-//  return "Custom page added";
- * 
- */
 }
-
-function fctl_sf_create_ftcl_user() {
-  return "New User added";  
+/**
+* Page callback db_test.
+*/
+function fctl_sf_show_submissions() {
+  $query = db_select('fctl_table1', 't1')->extend('PagerDefault');
+  $query
+  ->fields('t1', array('message'))
+  ->limit(10);
+  $result = $query->execute();
+  $output = '';
+  foreach ($result as $row) {
+    $output .= $row->message . "<br>";
+  }
+  $output .= theme('pager');
+  print $output;
+  return;
+ 
 }
 
 /**
 * Implements hook_permission().
+ * function comment_permission() {
+  return array(
+    'administer comments' => array(
+      'title' => t('Administer comments and comment settings'),
+    ),
+    'access comments' => array(
+      'title' => t('View comments'),
+    ),
+    'post comments' => array(
+      'title' => t('Post comments'),
+    ),
+    'skip comment approval' => array(
+      'title' => t('Skip comment approval'),
+    ),
+    'edit own comments' => array(
+      'title' => t('Edit own comments'),
+    ),
+  );
+}
 */
 function fctl_sf_page_permission() {
   return array(
@@ -95,9 +111,9 @@ function fctl_sf_page_permission() {
       'title' => t('Create a FCTL-75 page'),
       'description' => t('Create a FCTL-75 page'),
     ),
-    'edit own job post' => array(
-      'title' => t('Edit own FCTL-75 page'),
-      'description' => t('Edit your own FCTL-75 page'),
+    'access FCTL-75 page' => array(
+      'title' => t('View FCTL-75 page'),
+      'description' => t('View FCTL-75 page'),
     ),
     'edit any FCTL-75 page' => array(
       'title' => t('Edit any FCTL-75 page'),
@@ -115,32 +131,29 @@ function fctl_sf_page_permission() {
 }
 
 /**
-* Implements hook_node_access().
-*/
-function fctl_sf_page_node_access($op, $node, $account) {  
-  $is_author = $account->uid == $node->uid;
-  switch ($op) {
-    case 'create':
-      // Allow if user's role has 'create joke' permission.
-      if (user_access('create FCTL-75 page', $account)) {
-        print_r($op);  
-        return NODE_ACCESS_ALLOW;
-      }
-      
-    case 'update':
-      // Allow if user's role has 'edit own joke' permission and user is
-      // the author; or if the user's role has 'edit any joke' permission.
-      if (user_access('edit own job', $account) && $is_author ||
-          user_access('edit any job', $account)) {
-            return NODE_ACCESS_ALLOW;
-      }
-    
-    case 'delete':
-      // Allow if user's role has 'delete own joke' permission and user is
-      // the author; or if the user's role has 'delete any joke' permission.
-      if (user_access('delete own job', $account) && $is_author ||
-          user_access('delete any job', $account)) {
-            return NODE_ACCESS_ALLOW;
-      }
+ * Implements hook_node_type_update()
+ */
+function fctl_sf_page_node_type_update() {
+  $permissions = array('NODE_ACCESS_DENY');
+  foreach(array('anonymous user', 'authenticated user') as $role_name) {
+    $role = user_role_load_by_name($role_name);
+    user_role_grant_permissions($role->rid, $permissions);
+  //  dcm($role);
   }
 }
+
+        
+/**
+* Implements hook_node_access().
+
+function fctl_sf_node_access($node, $op, $account){
+  $type = is_string($node) ? $node : $node->type;
+  $accrole = implode($account->roles);
+  if ($type == 'fctl_sf_page' && $accrole == 'administrator'){
+    return NODE_ACCESS_ALLOW;
+  }
+  else{        
+    return NODE_ACCESS_DENY;
+  }
+}
+ */
