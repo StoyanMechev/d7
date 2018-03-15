@@ -25,6 +25,11 @@ function fctl_sf_test_form($form){
     '#size'=> 50,
     '#value' => $msg,
   ); 
+   $form['submit'] = array(
+    '#type' => 'submit',
+    '#value' => t('Submit record'),
+    '#submit' => array('fctl_sf_form_test_submit'),
+  );
   $form['test'] = array(
     '#type' => 'textfield',
     '#title' => t('Please enter an Integer between 1 and 30'), 
@@ -42,12 +47,7 @@ function fctl_sf_test_form($form){
     '#submit' => array('fctl_sf_test_form_reset_submit'),
     '#validate' => array('fctl_sf_test_form_reset_validate'),
   );
-  $form['submit'] = array(
-    '#type' => 'submit',
-    '#value' => t('Submit record'),
-    '#submit' => array('fctl_sf_form_test_submit'),
-  );
-
+ 
   return $form;
 }
 
@@ -58,7 +58,7 @@ function fctl_sf_form_test_submit($form, &$form_state){
   $record->uid = $user->uid;
   $record->date = time();
   $record->message = $form_state['values']['display'];
-  dsm($record);
+  //dsm($record);
   drupal_write_record($table, $record);
   
   drupal_set_message(t('Thank you for submitting this form!'));
@@ -70,12 +70,15 @@ function fctl_sf_form_test_submit($form, &$form_state){
 /**
  * Implements form_validate.
  */
-function fctl_sf_display_form_validate($form, &$form_state){
+function fctl_sf_test_form_validate($form, &$form_state){
+  if($form_state['values']['display'] == ''){
+    form_set_error('display', 'You can\'t submit empty record.');
+  }
   //Check if maxumim number of sumissions reached
   $result = db_query("SELECT COUNT(sid) AS count_sub FROM {fctl_table1}");
   $records = $result->fetchAssoc();
   $last = (int)$records['count_sub'];
-  if ($last > 30){
+  if ($last > 150){
     form_set_error('test', 'You have reached the max submissions allowed.');
   }
 }
