@@ -15,12 +15,12 @@ function fctl_sf_node_info() {
 }
 
 /**
-* Implementation of hook_menu().
+* Implements hook_menu().
 */
 function fctl_sf_menu() {
   $items['fctl_sf_page'] = array(
     'title' => 'Test page',
-    'page callback' => 'fctl_sf_create_ftcl_page',
+    'page callback' => 'fctl_sf_create_custom_page',
     'access callback' => 'fctl_sf_access_control',
     'type' => MENU_NORMAL_ITEM,
     'weight' => -1,  
@@ -61,16 +61,16 @@ function fctl_sf_menu() {
 }
 
 /**
-* Access callback.
+* Implements menu access callback.
 */
 function fctl_sf_access_control(){
   return user_has_role(3);    
 }
 
 /**
-* Page callback.
+* Creates custom page. Implements menu access callback.
 */
-function fctl_sf_create_ftcl_page() {
+function fctl_sf_create_custom_page() {
   $content = array();
   $content['raw_markup'] = array(
     '#type' => 'markup',
@@ -80,7 +80,7 @@ function fctl_sf_create_ftcl_page() {
 }
 
 /**
-* Page callback db_test.
+* Shows all submissions in a table. Implements TableSort and PagerDefault.
 */
 function fctl_sf_show_submissions_table() {
   // Define headers for table theme output and for sorting in db_select.
@@ -123,7 +123,7 @@ function fctl_sf_show_submissions_table() {
 }
 
 /**
-* Page callback db_test.
+*  Shows current user's submissions in a table.
 */
 function fctl_sf_show_submissions_table_cu($cuid) {
   // Define headers for table theme output and for sorting in db_select.
@@ -168,7 +168,7 @@ function fctl_sf_show_submissions_table_cu($cuid) {
 }
 
 /**
-* Page callback db_test.
+*  Shows all submissions. Implements only PagerDefault.
 */
 function fctl_sf_show_submissions() {
 
