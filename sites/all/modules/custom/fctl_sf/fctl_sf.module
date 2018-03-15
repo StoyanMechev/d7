@@ -1,9 +1,4 @@
 <?php
-
-/** 
- *  
- */
-
 /**
  * Implements hook_node_info()
  */
@@ -47,6 +42,21 @@ function fctl_sf_menu() {
     'type' => MENU_NORMAL_ITEM,
     'weight' => -1,
   );
+  $items['show_submissions_table'] = array(
+    'title' => 'Show submissions in table',
+    'page callback' => 'fctl_sf_show_submissions_table',
+    'access callback' => 'fctl_sf_access_control',
+    'type' => MENU_NORMAL_ITEM,
+    'weight' => -1,
+  );
+   $items['user/%user/fctl'] = array(
+    'title' => 'User\'s fctl submissions',
+    'page callback' => 'fctl_sf_show_submissions_table_cu',
+    'page arguments' => array(1),
+    'access callback' => 'user_is_logged_in',
+    'type' => MENU_LOCAL_TASK,
+    'weight' => 9,
+  );
   return $items;
 }
 
@@ -61,50 +71,128 @@ function fctl_sf_access_control(){
 * Page callback.
 */
 function fctl_sf_create_ftcl_page() {
-  $content = "This is a custom test page";
+  $content = array();
+  $content['raw_markup'] = array(
+    '#type' => 'markup',
+    '#markup' => '<b>This is a custom test page'
+  );
   return $content;
 }
+
+/**
+* Page callback db_test.
+*/
+function fctl_sf_show_submissions_table() {
+  // Define headers for table theme output and for sorting in db_select.
+  $header = array(
+    array('data' => t('Submission ID'), 'field' => 'sid'),
+    array('data' => t('Message'), 'field' => 'message'),
+    array('data' => t('Submission date'), 'field' => 'date'),
+    array('data' => t('Submitted by'), 'field' => 'name'),
+  );
+  $query = db_select('fctl_table1', 't1')->extend('PagerDefault')->extend('TableSort');
+  $query->innerJoin('users', 'u', 't1.uid = u.uid');
+  $query->addField('t1', 'date');
+  $query->addField('t1', 'sid');
+  $query->addField('t1', 'message');
+  $query->addField('u', 'name');
+  $query->orderByHeader($header);
+  $query->limit(10);
+  $result = $query->execute();
+  $output = '';
+  $rows = array();
+  if(!empty($result)){
+    foreach ($result as $record) {
+      $record->date = date('d/m/Y H:i:s',$record->date);
+      $rows[] = array(
+        $record->sid,
+        $record->message,
+        $record->date,
+        $record->name,
+      //dsm($row);
+      );
+    }
+  }
+  $output .= theme(
+    'table', 
+    array('header' => $header, 'rows' =>$rows,)
+    ); //theme as table
+   $output .= theme('pager');
+  //echo $output;
+  return $output;
+}
+
+/**
+* Page callback db_test.
+*/
+function fctl_sf_show_submissions_table_cu($cuid) {
+  // Define headers for table theme output and for sorting in db_select.
+  dsm($cuid);
+  $header = array(
+    array('data' => t('Submission ID'), 'field' => 'sid'),
+    array('data' => t('Message'), 'field' => 'message'),
+    array('data' => t('Submission date'), 'field' => 'date'),
+    array('data' => t('Submitted by'), 'field' => 'name'),
+  );
+  $query = db_select('fctl_table1', 't1')->extend('PagerDefault')->extend('TableSort');
+  $query->innerJoin('users', 'u', 't1.uid = u.uid');
+  $query->addField('t1', 'date');
+  $query->addField('t1', 'sid');
+  $query->addField('t1', 'message');
+  $query->addField('u', 'name');
+  $query->condition('t1.uid',$cuid->uid);
+  $query->orderByHeader($header);
+  $query->limit(10);
+  $result = $query->execute();
+  $output = '';
+  $rows = array();
+  if(!empty($result)){
+    foreach ($result as $record) {
+      $record->date = date('d/m/Y H:i:s',$record->date);
+      $rows[] = array(
+        $record->sid,
+        $record->message,
+        $record->date,
+        $record->name,
+      //dsm($row);
+      );
+    }
+  }
+  $output .= theme(
+    'table', 
+    array('header' => $header, 'rows' =>$rows,)
+    ); //theme as table
+   $output .= theme('pager');
+  //echo $output;
+  return $output;
+}
+
 /**
 * Page callback db_test.
 */
 function fctl_sf_show_submissions() {
+
   $query = db_select('fctl_table1', 't1')->extend('PagerDefault');
-  $query
-  ->fields('t1', array('message'))
-  ->limit(10);
+  $query->innerJoin('users', 'u', 't1.uid = u.uid');
+  $query->addField('t1', 'date');
+  $query->addField('t1', 'sid');
+  $query->addField('t1', 'message');
+  $query->addField('u', 'name');
   $result = $query->execute();
   $output = '';
   foreach ($result as $row) {
-    $output .= $row->message . "<br>";
+    $row->date = date('d/m/Y H:i:s',$row->date);
+    $output .= $row->sid . ' '
+      . $row->message . ' '
+      . $row->date . ' ' 
+      . $row->name . "<br>";
+    //dsm($row);
   }
   $output .= theme('pager');
-  print $output;
-  return;
- 
+  //echo $output;
+  return render($output);
 }
 
-/**
-* Implements hook_permission().
- * function comment_permission() {
-  return array(
-    'administer comments' => array(
-      'title' => t('Administer comments and comment settings'),
-    ),
-    'access comments' => array(
-      'title' => t('View comments'),
-    ),
-    'post comments' => array(
-      'title' => t('Post comments'),
-    ),
-    'skip comment approval' => array(
-      'title' => t('Skip comment approval'),
-    ),
-    'edit own comments' => array(
-      'title' => t('Edit own comments'),
-    ),
-  );
-}
-*/
 function fctl_sf_page_permission() {
   return array(
     'create FCTL-75 page' => array(
@@ -119,33 +207,18 @@ function fctl_sf_page_permission() {
       'title' => t('Edit any FCTL-75 page'),
       'description' => t('Edit any FCTL-75 page'),
     ),
-    'delete own FCTL-75 page' => array(
-      'title' => t('Delete own FCTL-75 page'),
-      'description' => t('Delete own FCTL-75 page'),
-    ),
     'delete any FCTL-75 page' => array(
       'title' => t('Delete any FCTL-75 page'),
       'description' => t('Delete any FCTL-75 page'),
     ),
-  );
+  );   
 }
 
-/**
- * Implements hook_node_type_update()
- */
-function fctl_sf_page_node_type_update() {
-  $permissions = array('NODE_ACCESS_DENY');
-  foreach(array('anonymous user', 'authenticated user') as $role_name) {
-    $role = user_role_load_by_name($role_name);
-    user_role_grant_permissions($role->rid, $permissions);
-  //  dcm($role);
-  }
-}
 
         
 /**
 * Implements hook_node_access().
-
+ */
 function fctl_sf_node_access($node, $op, $account){
   $type = is_string($node) ? $node : $node->type;
   $accrole = implode($account->roles);
@@ -156,4 +229,3 @@ function fctl_sf_node_access($node, $op, $account){
     return NODE_ACCESS_DENY;
   }
 }
- */
